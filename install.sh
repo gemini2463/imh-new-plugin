@@ -249,7 +249,7 @@ install_plain() {
 update_cwp_config() {
     local target="/usr/local/cwpsrv/htdocs/resources/admin/include/3rdparty.php"
     local include_file="/usr/local/cwpsrv/htdocs/resources/admin/include/$SCRIPT_NAME.php"
-    local include_statement="include('${include_file}');"
+    local include_statement="<?php include('${include_file}'); ?>"
 
     # Validate files
     [[ -f "$target" ]] || error_exit "Target file does not exist: $target"
@@ -278,7 +278,7 @@ update_cwp_config() {
     if grep -q '?>' "$target"; then
         # File has closing PHP tag - insert before it
         awk -v inc="$include_statement" '
-            /^[[:space:]]*\?>/ && !done {
+            /\?>/ && !done {
                 print inc
                 done = 1
             }

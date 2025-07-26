@@ -43,7 +43,6 @@ The content is organized as follows:
 .gitignore
 cwp-include.php
 cwp-include.php.sha256
-cwp-include.txt
 imh-new-plugin.conf
 imh-new-plugin.conf.sha256
 imh-new-plugin.js
@@ -52,14 +51,123 @@ imh-new-plugin.php
 imh-new-plugin.php.sha256
 index.php
 index.php.sha256
-index.txt
 install.sh
+README.md
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
 
-<file path="index.txt">
+<file path="README.md">
+# imh-new-plugin, v0.0.1
+
+cPanel and CWP plugin template.
+
+- cPanel/WHM path: `/usr/local/cpanel/whostmgr/docroot/cgi/imh-new-plugin/index.php`
+- CWP path: `/usr/local/cwpsrv/htdocs/resources/admin/modules/imh-new-plugin.php`
+
+## Screenshot
+
+![Screenshot](whm-plugin.png)
+
+# Installation
+
+- Run as the Root user: `curl -fsSL https://raw.githubusercontent.com/gemini2463/imh-new-plugin/master/install.sh | sh`
+
+# Files
+
+## Shell installer
+
+- install.sh
+
+## Main script
+
+- index.php
+- index.php.sha256
+- imh-new-plugin.php
+- imh-new-plugin.php.sha256
+
+`sha256sum index.php > imh-new-plugin.php.sha256; sha256sum index.php > index.php.sha256`
+
+## Javascript
+
+- imh-new-plugin.js
+- imh-new-plugin.js.sha256
+
+`sha256sum imh-new-plugin.js > imh-new-plugin.js.sha256`
+
+## Icon
+
+- imh-new-plugin.png
+- imh-new-plugin.png.sha256
+
+`sha256sum imh-new-plugin.png > imh-new-plugin.png.sha256`
+
+## CWP include
+
+- cwp-include.php
+- cwp-include.php.sha256
+
+`sha256sum cwp-include.php > cwp-include.php.sha256`
+</file>
+
+<file path="cwp-include.php">
+<script type="text/javascript">
+    $(document).ready(function() {
+        var newButtons = '' +
+            ' <li>' +
+            ' <a href="#" class="hasUl"><span aria-hidden="true" class="icon16 icomoon-icon-hammer"></span>New Plugin<span class="hasDrop icon16 icomoon-icon-arrow-down-2"></span></a>' +
+            '      <ul class="sub">'
+        <?php
+
+        if (file_exists("/usr/local/cwpsrv/htdocs/resources/admin/modules/imh-new-plugin.php")) {
+            echo "+'                <li><a href=\"index.php?module=imh-new-plugin\"><span class=\"icon16 icomoon-icon-arrow-right-3\"></span>New Plugin</a></li>'\n";
+        }
+
+        ?>
+            +
+            '      </ul>' +
+            '</li>';
+        $(".mainnav > ul").append(newButtons);
+    });
+</script>
+</file>
+
+<file path="cwp-include.php.sha256">
+4eb2084eb068a125eeca91a3189e9769e27964f7ca174f0722086d6b39314962  cwp-include.php
+</file>
+
+<file path="imh-new-plugin.conf">
+service=whostmgr
+url=/cgi/imh-new-plugin/index.php
+user=root
+phpHandler=/php/83/etc
+features=any
+displayname=New Plugin
+acls=any
+entryurl=imh-new-plugin/index.php
+target=_self
+icon=imh-new-plugin.png
+name=imh-new-plugin
+</file>
+
+<file path="imh-new-plugin.conf.sha256">
+daffb201623096df47366f9d84c58ef17d69742a278cc0ec3cd6a27e7996fa55  imh-new-plugin.conf
+</file>
+
+<file path="imh-new-plugin.js">
+function dummyFunction() {
+        // This is a fake dummy function for placeholder purposes
+        console.log('Dummy function called.');
+        return 'Dummy result';
+    }
+</file>
+
+<file path="imh-new-plugin.js.sha256">
+6c15c22ec9c72c2e99ed36bd53a5379ff799b118c05a6c6efc533c33bdbc7a42  imh-new-plugin.js
+</file>
+
+<file path="imh-new-plugin.php">
 <?php
 
 /**
@@ -433,7 +541,17 @@ if ($isCPanelServer) {
 };
 </file>
 
+<file path="imh-new-plugin.php.sha256">
+e0add63d9f038bd45c4ad411c18536c991fad6aafdb9565e3e83cfe7358ef21a  index.php
+</file>
+
+<file path="index.php.sha256">
+e0add63d9f038bd45c4ad411c18536c991fad6aafdb9565e3e83cfe7358ef21a  index.php
+</file>
+
 <file path=".gitignore">
+*.txt
+
 # Logs
 *logs
 *.log
@@ -460,81 +578,6 @@ lerna-debug.log*
 *.sw?
 </file>
 
-<file path="cwp-include.php">
-<?php
-header('Content-Type: text/plain');
-echo file_get_contents("cwp-include.txt");
-</file>
-
-<file path="cwp-include.php.sha256">
-27f8502966a7ccf80e01ab039bcb45b3d3eb05a5048c94245e46ac4e99c742c7  cwp-include.php
-</file>
-
-<file path="cwp-include.txt">
-<script type="text/javascript">
-        $(document).ready(function() {
-                var newButtons = ''
-                +' <li>'
-                +' <a href="#" class="hasUl"><span aria-hidden="true" class="icon16 icomoon-icon-hammer"></span>New Plugin<span class="hasDrop icon16 icomoon-icon-arrow-down-2"></span></a>'
-                +'      <ul class="sub">'
-<?php
-
-        if (file_exists("/usr/local/cwpsrv/htdocs/resources/admin/modules/imh-new-plugin.php")) {
-                echo "+'                <li><a href=\"index.php?module=imh-new-plugin\"><span class=\"icon16 icomoon-icon-arrow-right-3\"></span>New Plugin</a></li>'\n";
-        }
-
-?>
-                +'      </ul>'
-                +'</li>';
-                $(".mainnav > ul").append(newButtons);
-        });
-</script>
-</file>
-
-<file path="imh-new-plugin.conf">
-service=whostmgr
-url=/cgi/imh-new-plugin/index.php
-user=root
-phpHandler=/php/83/etc
-features=any
-displayname=New Plugin
-acls=any
-entryurl=imh-new-plugin/index.php
-target=_self
-icon=imh-new-plugin.png
-name=imh-new-plugin
-</file>
-
-<file path="imh-new-plugin.conf.sha256">
-daffb201623096df47366f9d84c58ef17d69742a278cc0ec3cd6a27e7996fa55  imh-new-plugin.conf
-</file>
-
-<file path="imh-new-plugin.js">
-function dummyFunction() {
-        // This is a fake dummy function for placeholder purposes
-        console.log('Dummy function called.');
-        return 'Dummy result';
-    }
-</file>
-
-<file path="imh-new-plugin.js.sha256">
-6c15c22ec9c72c2e99ed36bd53a5379ff799b118c05a6c6efc533c33bdbc7a42  imh-new-plugin.js
-</file>
-
-<file path="imh-new-plugin.php">
-<?php
-header('Content-Type: text/plain');
-echo file_get_contents("index.txt");
-</file>
-
-<file path="imh-new-plugin.php.sha256">
-38e77986f449a69b12d9ebfda35e1cc938fc4c6ebaa0172a5be3c9ff8e5ff57e  imh-new-plugin.php
-</file>
-
-<file path="index.php.sha256">
-38e77986f449a69b12d9ebfda35e1cc938fc4c6ebaa0172a5be3c9ff8e5ff57e  index.php
-</file>
-
 <file path="index.php">
 <?php
 header('Content-Type: text/plain');
@@ -553,7 +596,7 @@ set -euo pipefail
 # Script metadata
 readonly SCRIPT_VERSION="0.0.1"
 readonly SCRIPT_NAME="imh-new-plugin"
-readonly BASE_URL="https://mywebsite.com/scriptfiles/$SCRIPT_NAME"
+readonly BASE_URL="https://raw.githubusercontent.com/gemini2463/$SCRIPT_NAME/master"
 
 # Color codes for output
 readonly RED='\033[0;31m'

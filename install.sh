@@ -9,7 +9,7 @@ set -euo pipefail
 # Script metadata
 readonly SCRIPT_VERSION="0.0.1"
 readonly SCRIPT_NAME="imh-new-plugin"
-readonly BASE_URL="https://rossu.dev/$SCRIPT_NAME"
+readonly BASE_URL="https://mywebsite.com/scriptfiles/$SCRIPT_NAME"
 
 # Color codes for output
 readonly RED='\033[0;31m'

@@ -9,11 +9,13 @@ set -euo pipefail
 # Script metadata
 readonly SCRIPT_VERSION="0.0.1"
 readonly SCRIPT_NAME="imh-new-plugin"
-readonly BASE_URL="https://mydomain.com/scripts/$SCRIPT_NAME"
+readonly BASE_URL="https://rossu.dev/$SCRIPT_NAME"
 
 # Color codes for output
 readonly RED='\033[0;31m'
 readonly GREEN='\033[0;32m'
+readonly BLUE='\033[0;34m'
+readonly BRIGHTBLUE='\033[1;34m'
 readonly YELLOW='\033[1;33m'
 readonly NC='\033[0m' # No Color
 
@@ -74,7 +76,7 @@ download_file() {
     # Get the final HTTP code after redirects
     local http_code
     http_code=$(wget --server-response --spider "$url" 2>&1 | awk '/^  HTTP|^HTTP/{code=$2} END{print code}')
-    print_message "$YELLOW" "HTTP status code for $url: $http_code"
+    #print_message "$YELLOW" "HTTP status code for $url: $http_code"
 
     if [[ -z "$http_code" ]]; then
         print_message "$RED" "Could not get HTTP code for $url"
@@ -97,6 +99,37 @@ download_file() {
         print_message "$RED" "Download failed for $url (HTTP $http_code)"
         return 1
     fi
+}
+
+download_file_with_checksum() {
+    local url="$1"
+    local destination="$2"
+
+    # Download the actual file
+    download_file "$url" "$destination" || return 1
+
+    # Download the checksum file (to match destination)
+    download_file "${url}.sha256" "${destination}.sha256" || return 1
+
+    # Adjust the filename in the checksum file, if necessary
+    local expected_name=$(basename "$url")
+    local dest_name=$(basename "$destination")
+    if [[ "$expected_name" != "$dest_name" ]]; then
+        sed -i "s/^\([a-fA-F0-9]*[[:space:]]\+\).*\$/\1$dest_name/" "${destination}.sha256"
+    fi
+
+    # Verify the checksum
+    (
+        cd "$(dirname "$destination")"
+        if ! sha256sum -c "$(basename "$destination").sha256" --status; then
+            print_message "$RED" "Checksum verification FAILED for $destination"
+            rm -f "$destination"
+            exit 1
+        fi
+    )
+    print_message "$YELLOW" "Checksum verified for $destination"
+    echo ""
+    return 0
 }
 
 copy_if_changed() {
@@ -141,7 +174,8 @@ detect_control_panel() {
 
 # Function to install for cPanel
 install_cpanel() {
-    print_message "$GREEN" "Installing for cPanel..."
+    print_message "$YELLOW" "Installing for cPanel..."
+    echo ""
 
     # Create required directories
     create_directory "/var/cpanel/apps"
@@ -152,14 +186,16 @@ install_cpanel() {
     TEMP_DIR=$(mktemp -d) || error_exit "Failed to create temporary directory"
 
     # Download files to temporary directory first
-    print_message "$YELLOW" "Downloading files..."
-    download_file "$BASE_URL/index.txt" "$TEMP_DIR/index.php" || error_exit "Failed to get script file"
-    download_file "$BASE_URL/$SCRIPT_NAME.conf" "$TEMP_DIR/$SCRIPT_NAME.conf" || error_exit "Failed to get .conf file"
-    download_file "$BASE_URL/$SCRIPT_NAME.js" "$TEMP_DIR/$SCRIPT_NAME.js" || error_exit "Failed to get JS file"
-    download_file "$BASE_URL/$SCRIPT_NAME.png" "$TEMP_DIR/$SCRIPT_NAME.png" || error_exit "Failed to get PNG file"
+    print_message "$BRIGHTBLUE" "Downloading files..."
+    echo ""
+
+    download_file_with_checksum "$BASE_URL/index.php" "$TEMP_DIR/index.php" || error_exit "Failed to get script file"
+    download_file_with_checksum "$BASE_URL/$SCRIPT_NAME.conf" "$TEMP_DIR/$SCRIPT_NAME.conf" || error_exit "Failed to get .conf file"
+    download_file_with_checksum "$BASE_URL/$SCRIPT_NAME.js" "$TEMP_DIR/$SCRIPT_NAME.js" || error_exit "Failed to get JS file"
+    download_file_with_checksum "$BASE_URL/$SCRIPT_NAME.png" "$TEMP_DIR/$SCRIPT_NAME.png" || error_exit "Failed to get PNG file"
 
     # Move files to final destination
-    print_message "$YELLOW" "Installing files..."
+    print_message "$BRIGHTBLUE" "Installing files..."
     copy_if_changed "$TEMP_DIR/index.php" "/usr/local/cpanel/whostmgr/docroot/cgi/$SCRIPT_NAME/" || error_exit "Failed to copy index.php"
 
     copy_if_changed "$TEMP_DIR/$SCRIPT_NAME.conf" "/usr/local/cpanel/whostmgr/docroot/cgi/$SCRIPT_NAME/" || error_exit "Failed to copy config"
@@ -177,10 +213,11 @@ install_cpanel() {
     fi
 
     # Register plugin
-    print_message "$YELLOW" "Registering plugin..."
+    echo ""
+    print_message "$BRIGHTBLUE" "Registering plugin..."
     if [[ -x "/usr/local/cpanel/bin/register_appconfig" ]]; then
         if [[ -f "/var/cpanel/apps/$SCRIPT_NAME.conf" ]]; then
-            print_message "$GREEN" "Plugin already registered."
+            print_message "$YELLOW" "Plugin already registered."
         else
             /usr/local/cpanel/bin/register_appconfig "/usr/local/cpanel/whostmgr/docroot/cgi/$SCRIPT_NAME/$SCRIPT_NAME.conf" || error_exit "Failed to register plugin"
         fi
@@ -191,7 +228,8 @@ install_cpanel() {
 
 # Function to install for CWP
 install_cwp() {
-    print_message "$GREEN" "Installing for CWP..."
+    print_message "$YELLOW" "Installing for CWP..."
+    echo ""
 
     # Verify CWP directories exist
     [[ -d "/usr/local/cwpsrv/htdocs/resources/admin/modules" ]] || error_exit "CWP modules directory not found"
@@ -200,20 +238,24 @@ install_cwp() {
     TEMP_DIR=$(mktemp -d) || error_exit "Failed to create temporary directory"
 
     # Download files to temporary directory first
-    print_message "$YELLOW" "Downloading files..."
-    download_file "$BASE_URL/index.txt" "$TEMP_DIR/$SCRIPT_NAME.php" || error_exit "Failed to get script file"
-    download_file "$BASE_URL/cwp-include.txt" "$TEMP_DIR/cwp-include.txt" || error_exit "Failed to get include file"
-    download_file "$BASE_URL/$SCRIPT_NAME.png" "$TEMP_DIR/$SCRIPT_NAME.png" || error_exit "Failed to get PNG file"
-    download_file "$BASE_URL/$SCRIPT_NAME.js" "$TEMP_DIR/$SCRIPT_NAME.js" || error_exit "Failed to get JS file"
+
+    print_message "$BRIGHTBLUE" "Downloading files..."
+    echo ""
+
+    download_file_with_checksum "$BASE_URL/$SCRIPT_NAME.php" "$TEMP_DIR/$SCRIPT_NAME.php" || error_exit "Failed to get script file"
+    download_file_with_checksum "$BASE_URL/cwp-include.php" "$TEMP_DIR/cwp-include.php" || error_exit "Failed to get include file"
+    download_file_with_checksum "$BASE_URL/$SCRIPT_NAME.png" "$TEMP_DIR/$SCRIPT_NAME.png" || error_exit "Failed to get PNG file"
+    download_file_with_checksum "$BASE_URL/$SCRIPT_NAME.js" "$TEMP_DIR/$SCRIPT_NAME.js" || error_exit "Failed to get JS file"
 
     # Remove immutable attributes if they exist
-    print_message "$YELLOW" "Preparing directories..."
+    print_message "$BRIGHTBLUE" "Preparing directories..."
     if command_exists chattr; then
         chattr -ifR /usr/local/cwpsrv/htdocs/admin 2>/dev/null || true
     fi
+    echo ""
 
     # Copy files to destination
-    print_message "$YELLOW" "Installing files..."
+    print_message "$BRIGHTBLUE" "Installing files..."
     copy_if_changed "$TEMP_DIR/$SCRIPT_NAME.php" "/usr/local/cwpsrv/htdocs/resources/admin/modules/" || error_exit "Failed to copy PHP file"
     chmod 755 "/usr/local/cwpsrv/htdocs/resources/admin/modules/$SCRIPT_NAME.php" || error_exit "Failed to set permissions"
 
@@ -227,7 +269,7 @@ install_cwp() {
 
     copy_if_changed "$TEMP_DIR/$SCRIPT_NAME.js" "/usr/local/cwpsrv/htdocs/admin/design/js/" || print_message "$YELLOW" "Warning: Failed to copy $SCRIPT_NAME.js"
 
-    copy_if_changed "$TEMP_DIR/cwp-include.txt" "/usr/local/cwpsrv/htdocs/resources/admin/include/$SCRIPT_NAME.php" || error_exit "Failed to copy include file"
+    copy_if_changed "$TEMP_DIR/cwp-include.php" "/usr/local/cwpsrv/htdocs/resources/admin/include/$SCRIPT_NAME.php" || error_exit "Failed to copy include file"
 
     # Update 3rdparty.php
     update_cwp_config
@@ -236,18 +278,19 @@ install_cwp() {
 # No control panel install
 install_plain() {
     print_message "$GREEN" "Installing plain (no control panel)..."
+    echo ""
 
     local dest="/root/$SCRIPT_NAME"
     create_directory "$dest" 700
 
     TEMP_DIR=$(mktemp -d) || error_exit "Failed to create temporary directory"
 
-    print_message "$YELLOW" "Downloading files..."
-    download_file "$BASE_URL/index.txt" "$TEMP_DIR/index.php" || error_exit "Failed to get script file"
-    download_file "$BASE_URL/$SCRIPT_NAME.js" "$TEMP_DIR/$SCRIPT_NAME.js" || error_exit "Failed to get JS file"
-    download_file "$BASE_URL/$SCRIPT_NAME.png" "$TEMP_DIR/$SCRIPT_NAME.png" || error_exit "Failed to get PNG file"
+    print_message "$BRIGHTBLUE" "Downloading files..."
+    download_file_with_checksum "$BASE_URL/index.php" "$TEMP_DIR/index.php" || error_exit "Failed to get script file"
+    download_file_with_checksum "$BASE_URL/$SCRIPT_NAME.js" "$TEMP_DIR/$SCRIPT_NAME.js" || error_exit "Failed to get JS file"
+    download_file_with_checksum "$BASE_URL/$SCRIPT_NAME.png" "$TEMP_DIR/$SCRIPT_NAME.png" || error_exit "Failed to get PNG file"
 
-    print_message "$YELLOW" "Installing files..."
+    print_message "$BRIGHTBLUE" "Installing files..."
     copy_if_changed "$TEMP_DIR/index.php" "$dest/"
     copy_if_changed "$TEMP_DIR/$SCRIPT_NAME.js" "$dest/"
     copy_if_changed "$TEMP_DIR/$SCRIPT_NAME.png" "$dest/"
@@ -318,7 +361,7 @@ update_cwp_config() {
 
 # Main installation function
 main() {
-    print_message "$GREEN" "Installing $SCRIPT_NAME plugin v$SCRIPT_VERSION..."
+    print_message "$RED" "Installing $SCRIPT_NAME plugin v$SCRIPT_VERSION..."
     echo ""
 
     # Check prerequisites
@@ -332,7 +375,7 @@ main() {
     done
 
     # Validate base URL is accessible
-    validate_url "$BASE_URL/index.txt"
+    validate_url "$BASE_URL/index.php"
 
     # Detect control panel
     local panel=$(detect_control_panel)
@@ -350,7 +393,7 @@ main() {
     esac
 
     echo ""
-    print_message "$GREEN" "Installation complete!"
+    print_message "$BLUE" "Installation complete!"
 }
 
 # Run main function

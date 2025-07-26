@@ -42,6 +42,10 @@ cPanel and CWP plugin template.
 
 `sha256sum imh-new-plugin.png > imh-new-plugin.png.sha256`
 
+## cPanel conf
+- imh-new-plugin.conf
+- imh-new-plugin.conf.sha256
+
 ## CWP include
 
 - cwp-include.php

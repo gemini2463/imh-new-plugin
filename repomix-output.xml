@@ -90,6 +90,35 @@ function dummyFunction() {
 d7a33972b7dd7030782cff4a7f19557c875a0896f2ab58df9a2b5692d22c72c9  index.php
 </file>
 
+<file path=".gitignore">
+*.txt
+
+# Logs
+*logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+*node_modules
+*dist
+*dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+</file>
+
 <file path="imh-new-plugin.php">
 <?php
 
@@ -462,35 +491,6 @@ if ($isCPanelServer) {
 } else {
     echo '</div>';
 };
-</file>
-
-<file path=".gitignore">
-*.txt
-
-# Logs
-*logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-*node_modules
-*dist
-*dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
 </file>
 
 <file path="imh-new-plugin.php.sha256">
@@ -913,11 +913,6 @@ cPanel and CWP plugin template.
 ## cPanel conf
 - imh-new-plugin.conf - [AppConfig Configuration File](https://api.docs.cpanel.net/guides/guide-to-whm-plugins/guide-to-whm-plugins-appconfig-configuration-file)
 - imh-new-plugin.conf.sha256 - `sha256sum imh-new-plugin.conf > imh-new-plugin.conf.sha256`
-
-## CWP include
-
-- cwp-include.php - [CWP include](https://wiki.centos-webpanel.com/how-to-build-a-cwp-module)
-- cwp-include.php.sha256 - `sha256sum cwp-include.php > cwp-include.php.sha256`
 </file>
 
 <file path="install.sh">

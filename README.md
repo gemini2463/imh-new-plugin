@@ -1,4 +1,4 @@
-# imh-new-plugin, v0.0.1
+# imh-new-plugin, v0.0.2
 
 cPanel and CWP plugin template.
 
